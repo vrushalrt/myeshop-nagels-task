@@ -32,12 +32,14 @@
    <https://github.com/vrushalrt/myeshop-nagels-task.git>
 
 2. Open a terminal or command prompt and navigate to the project directory.
+3. Install dependencies using Composer:\
+   `composer install`
 
-3. Start the Symfony server with the command:\
+4. Start the Symfony server with the command:\
    `php -S 127.0.0.1:8000 -t public/`.
    ![img_3.png](img_3.png)
 
-4. If necessary, populate the database tables using Symfony fixtures:\
+5. If necessary, populate the database tables using Symfony fixtures:\
    `php bin/console doctrine:fixtures:load`.
    ![img_4.png](img_4.png)
 
