@@ -1,0 +1,5 @@
+/.vscode
+/logs/*
+.DS_Store
+/buildtest
+!/data/mysql/.gitkeep
