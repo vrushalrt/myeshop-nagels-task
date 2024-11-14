@@ -1,12 +1,14 @@
 
 ###> symfony/framework-bundle ###
-/.env.local
-/.env.local.php
-/.env.*.local
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
 /vendor/
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
 ###< symfony/framework-bundle ###
 
 ###> phpunit/phpunit ###
@@ -23,3 +25,7 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+/.fleet
+/.idea
+/.vscode
