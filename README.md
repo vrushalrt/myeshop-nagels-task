@@ -9,7 +9,7 @@
 - Docker
 
 ###   Note
-- .env file already configured for symfony and docker
+- .env file already configured for symfony and docker.
 
 # Docker
 
