@@ -8,6 +8,9 @@
 - Symfony CLI 5.9 or higher (OPTIONAL)
 - Docker
 
+###   Note
+- .env file already configured for symfony and docker
+
 # Docker
 
 1. Navigate to the "docker" directory within the project files.
