@@ -14,40 +14,31 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
-/**
- * ApiProductController handles API requests for product data.
- *
- * This controller provides endpoints for retrieving and exporting product data.
- * It interacts with the ProductRepository to fetch data and uses caching mechanisms
- * to enhance performance. The controller also includes functionality to export
- * product data in CSV format.
- *
- * with redis cache
- */
-class ApiProductController extends AbstractController
+// With Array cache
+class ApiProduct2Controller extends AbstractController
 {
     public function __construct(
         private ProductRepository $productRepository,
         private CsvExporter $csvExporter,
         private CacheInterface $cache,
-        private ProductService $productService
+        private ProductService $productService,
     )
     {
     }
 
     /**
      * Get Producsts List
-     *
      * @param Request $request
      * @return JsonResponse
      * @throws InvalidArgumentException
      */
-    #[Route('/api/product', name: 'app_api_product', methods: ['GET'])]
+    #[Route('/api/product2', name: 'app_api_api_product2')]
     public function getProductsApi(Request $request): JsonResponse
     {
         try {
             $searchProducts = $this->getProducts($request, $this->productRepository);
             $productList = $this->productService->productArrayCompiler($searchProducts['items']);
+
 
             return $this->json(
                 [
@@ -60,12 +51,7 @@ class ApiProductController extends AbstractController
         }
     }
 
-    /**
-     * CSV export for Product data
-     *
-     *
-     */
-    #[Route('/api/product/export', name: 'app_api_product_export', methods: ['GET'])]
+    #[Route('/api/product2/export', name: 'app_api_product_export', methods: ['GET'])]
     public function getProductsExport(Request $request): Response
     {
         // Get Products
@@ -104,19 +90,19 @@ class ApiProductController extends AbstractController
             'max' => $request->get('filterMax', null)
         ];
 
-        // For Redis key generation unique as per parameters
-        $key = 'getProducts_'.md5(serialize([
-            $search,
-            $pagination['page'],
-            $pagination['limit'],
-            $sort['column'],
-            $sort['order'],
-            $filter['column'],
-            $filter['value'],
-            $filter['operator'],
-            $filter['min'],
-            $filter['max']
-        ]));
+        // For Array Cache key generation unique as per parameters
+        $key = 'getProducts2_'.md5(serialize([
+                $search,
+                $pagination['page'],
+                $pagination['limit'],
+                $sort['column'],
+                $sort['order'],
+                $filter['column'],
+                $filter['value'],
+                $filter['operator'],
+                $filter['min'],
+                $filter['max']
+            ]));
 
         // Cache Logic
         return $this->cache->get($key, function(ItemInterface $item) use ($request, $productRepository, $search, $pagination, $sort, $filter) {

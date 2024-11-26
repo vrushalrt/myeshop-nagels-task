@@ -2,11 +2,9 @@
 
 namespace App\Controller\Api;
 
-use App\Entity\Product;
 use App\Repository\ProductRepository;
 use App\Services\CsvExporter;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Tools\Pagination\Paginator;
+use App\Services\ProductService;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,10 +21,17 @@ use Symfony\Contracts\Cache\ItemInterface;
  * It interacts with the ProductRepository to fetch data and uses caching mechanisms
  * to enhance performance. The controller also includes functionality to export
  * product data in CSV format.
+ *
+ * with redis cache
  */
 class ApiProductController extends AbstractController
 {
-    public function __construct(private CacheInterface $cache)
+    public function __construct(
+        private ProductRepository $productRepository,
+        private CsvExporter $csvExporter,
+        private CacheInterface $cache,
+        private ProductService $productService
+    )
     {
     }
 
@@ -34,19 +39,17 @@ class ApiProductController extends AbstractController
      * Get Producsts List
      *
      * @param Request $request
-     * @param ProductRepository $productRepository
      * @return JsonResponse
-     *
      * @throws InvalidArgumentException
      */
     #[Route('/api/product', name: 'app_api_product', methods: ['GET'])]
-    public function getProductsApi(Request $request, ProductRepository $productRepository): JsonResponse
+    public function getProductsApi(Request $request): JsonResponse
     {
         try {
-            $searchProducts = $this->getProducts($request, $productRepository);
-            $productList = $this->productListArrayCompiler($searchProducts['items']);
+            $searchProducts = $this->getProducts($request, $this->productRepository);
+            $productList = $this->productService->productArrayCompiler($searchProducts['items']);
 
-            return new JsonResponse(
+            return $this->json(
                 [
                     'pagination' => $searchProducts['pagination'],
                     'data' => $productList,
@@ -63,12 +66,15 @@ class ApiProductController extends AbstractController
      *
      */
     #[Route('/api/product/export', name: 'app_api_product_export', methods: ['GET'])]
-    public function getProductsExport(Request $request, ProductRepository $productRepository): Response
+    public function getProductsExport(Request $request): Response
     {
-        $searchProducts = $this->getProducts($request, $productRepository);
-        $productList = $this->productListArrayCompiler($searchProducts['items']);
+        // Get Products
+        $searchProducts = $this->getProducts($request, $this->productRepository);
 
-        return (new CsvExporter())->export($productList, 'products.csv');
+        // Compile Product List Array
+        $productList = $this->productService->productArrayCompiler($searchProducts['items']);
+
+        return $this->csvExporter->export($productList, 'products.csv');
     }
 
     /**
@@ -113,34 +119,10 @@ class ApiProductController extends AbstractController
         ]));
 
         // Cache Logic
-
         return $this->cache->get($key, function(ItemInterface $item) use ($request, $productRepository, $search, $pagination, $sort, $filter) {
 
-            $item->expiresAfter(3600); // 1 hour
-//            $item->expiresAfter(1); // 1 Sec
-
             return $productRepository->productSearch($search, $pagination, $sort, $filter);
-        } ) ;
-    }
 
-    /**
-     * Product List compiler function.
-     *
-     */
-    private function productListArrayCompiler($products): array
-    {
-        $productList = [];
-        foreach ($products as $productKey => $product)
-        {
-            $productList[] = [
-                'id' =>  $product->getId(),
-                'name' => $product->getName(),
-                'description' => $product->getDescription(),
-                'quantity' => $product->getQuantity(),
-                'price' => $product->getPrice(),
-                'isActive' => $product->isActive()
-            ];
-        }
-        return $productList;
+        } ) ;
     }
 }
